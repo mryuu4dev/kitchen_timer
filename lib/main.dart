@@ -9,16 +9,20 @@ class StopwatchController extends GetxController {
   late final Timer _timer;
   final Stopwatch _stopwatch = Stopwatch();
 
-  final RxString elapsedTime = '00:00'.obs;
+  int _targetTimeMillis = 0;
+  final RxString remainingTime = '00:00'.obs;
 
   @override
   void onInit() {
     _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
       int elapsedMillis = _stopwatch.elapsedMilliseconds;
-      int seconds = (elapsedMillis ~/ 1000) % 60;
-      int millisec = (elapsedMillis % 1000) ~/ 10;
-
-      elapsedTime.value = '${_padZero(seconds)}:${_padZero(millisec)}';
+      int remainingMillis =
+          (_targetTimeMillis - elapsedMillis).clamp(0, _targetTimeMillis);
+      if (remainingMillis >= 0) {
+        int seconds = (remainingMillis ~/ 1000) % 60;
+        int millisec = (remainingMillis % 1000) ~/ 10;
+        remainingTime.value = '${_padZero(seconds)}:${_padZero(millisec)}';
+      }
     });
     super.onInit();
   }
@@ -27,6 +31,12 @@ class StopwatchController extends GetxController {
   void dispose() {
     _timer.cancel();
     super.dispose();
+  }
+
+  void setTimer(int timeMillis) {
+    _stopwatch.stop();
+    _stopwatch.reset();
+    _targetTimeMillis = timeMillis;
   }
 
   void startStopTimer() {
@@ -60,9 +70,13 @@ class MyApp extends StatelessWidget {
             children: <Widget>[
               Obx(
                 () => Text(
-                  stopwatchController.elapsedTime.value,
+                  stopwatchController.remainingTime.value,
                   style: const TextStyle(fontSize: 50),
                 ),
+              ),
+              ElevatedButton(
+                onPressed: () => stopwatchController.setTimer(10 * 1000),
+                child: const Text('10秒'),
               ),
               ElevatedButton(
                 onPressed: () => stopwatchController.startStopTimer(),
