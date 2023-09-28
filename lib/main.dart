@@ -9,7 +9,7 @@ void main() {
   runApp(MyApp());
 }
 
-class StopwatchController extends GetxController {
+class TimerController extends GetxController {
   late final Timer _timer;
   final Stopwatch _stopwatch = Stopwatch();
 
@@ -21,32 +21,39 @@ class StopwatchController extends GetxController {
   final RxBool isTimerRunning = false.obs;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
+  bool _isAudioRunning = false;
 
   @override
   void onInit() {
     _audioPlayer.setReleaseMode(ReleaseMode.loop);
-    bool isAudioRunning = false;
     _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
-      int elapsedMillis = _stopwatch.elapsedMilliseconds;
-      int remainingMillis =
-          (_targetTimeMillis - elapsedMillis).clamp(0, _targetTimeMillis);
-      if (remainingMillis >= 0) {
-        int minutes = (remainingMillis ~/ (1000 * 60)) % 60;
-        int seconds = (remainingMillis ~/ 1000) % 60;
-        remainingTime.value = '${_padZero(minutes)}:${_padZero(seconds)}';
-      }
-      if (remainingMillis == 0 && _stopwatch.isRunning && !isAudioRunning) {
-        _audioPlayer.play(AssetSource('kitchen_timer1.mp3'));
-        isAudioRunning = true;
-      }
-      if (!_stopwatch.isRunning && isAudioRunning) {
-        _audioPlayer.stop();
-        isAudioRunning = false;
-      }
-      _remainingTimeMillis = remainingMillis;
+      _updateRemainingTime();
+      _soundOnTimerEnd();
       isTimerRunning.value = _stopwatch.isRunning;
     });
     super.onInit();
+  }
+
+  void _updateRemainingTime() {
+    int elapsedTimeMillis = _stopwatch.elapsedMilliseconds;
+    _remainingTimeMillis =
+        (_targetTimeMillis - elapsedTimeMillis).clamp(0, _targetTimeMillis);
+    if (_remainingTimeMillis >= 0) {
+      int minutes = (_remainingTimeMillis ~/ (1000 * 60)) % 60;
+      int seconds = (_remainingTimeMillis ~/ 1000) % 60;
+      remainingTime.value = '${_padZero(minutes)}:${_padZero(seconds)}';
+    }
+  }
+
+  void _soundOnTimerEnd() {
+    if (_remainingTimeMillis == 0 && _stopwatch.isRunning && !_isAudioRunning) {
+      _audioPlayer.play(AssetSource('kitchen_timer1.mp3'));
+      _isAudioRunning = true;
+    }
+    if (!_stopwatch.isRunning && _isAudioRunning) {
+      _audioPlayer.stop();
+      _isAudioRunning = false;
+    }
   }
 
   @override
@@ -83,7 +90,7 @@ class StopwatchController extends GetxController {
 class MyApp extends StatelessWidget {
   MyApp({super.key});
 
-  final stopwatchController = Get.put(StopwatchController());
+  final timerController = Get.put(TimerController());
 
   @override
   Widget build(BuildContext context) {
@@ -95,7 +102,7 @@ class MyApp extends StatelessWidget {
             children: <Widget>[
               Obx(
                 () => Text(
-                  stopwatchController.remainingTime.value,
+                  timerController.remainingTime.value,
                   style: const TextStyle(fontSize: 50),
                 ),
               ),
@@ -103,36 +110,33 @@ class MyApp extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   ElevatedButton(
-                    onPressed: () =>
-                        stopwatchController.setTimer(5 * 60 * 1000),
+                    onPressed: () => timerController.setTimer(5 * 60 * 1000),
                     child: const Text('5分'),
                   ),
                   ElevatedButton(
-                    onPressed: () =>
-                        stopwatchController.setTimer(3 * 60 * 1000),
+                    onPressed: () => timerController.setTimer(3 * 60 * 1000),
                     child: const Text('3分'),
                   ),
                   ElevatedButton(
-                    onPressed: () =>
-                        stopwatchController.setTimer(1 * 60 * 1000),
+                    onPressed: () => timerController.setTimer(1 * 60 * 1000),
                     child: const Text('1分'),
                   ),
                   ElevatedButton(
-                    onPressed: () => stopwatchController.setTimer(10 * 1000),
+                    onPressed: () => timerController.setTimer(10 * 1000),
                     child: const Text('10秒'),
                   ),
                 ],
               ),
               ElevatedButton(
-                onPressed: () => stopwatchController.startStopTimer(),
+                onPressed: () => timerController.startStopTimer(),
                 child: Obx(
                   () => Text(
-                    stopwatchController.isTimerRunning.value ? 'ストップ' : 'スタート',
+                    timerController.isTimerRunning.value ? 'ストップ' : 'スタート',
                   ),
                 ),
               ),
               ElevatedButton(
-                onPressed: () => stopwatchController.resetTimer(),
+                onPressed: () => timerController.resetTimer(),
                 child: const Text('リセット'),
               ),
             ],
