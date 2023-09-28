@@ -12,6 +12,8 @@ class StopwatchController extends GetxController {
   int _targetTimeMillis = 0;
   final RxString remainingTime = '00:00'.obs;
 
+  final RxBool isTimerRunning = false.obs;
+
   @override
   void onInit() {
     _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
@@ -23,6 +25,8 @@ class StopwatchController extends GetxController {
         int seconds = (remainingMillis ~/ 1000) % 60;
         remainingTime.value = '${_padZero(minutes)}:${_padZero(seconds)}';
       }
+
+      isTimerRunning.value = _stopwatch.isRunning;
     });
     super.onInit();
   }
@@ -100,7 +104,11 @@ class MyApp extends StatelessWidget {
               ),
               ElevatedButton(
                 onPressed: () => stopwatchController.startStopTimer(),
-                child: const Text('スタート/ストップ'),
+                child: Obx(
+                  () => Text(
+                    stopwatchController.isTimerRunning.value ? 'ストップ' : 'スタート',
+                  ),
+                ),
               ),
               ElevatedButton(
                 onPressed: () => stopwatchController.resetTimer(),
