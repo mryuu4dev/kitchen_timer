@@ -19,9 +19,9 @@ class StopwatchController extends GetxController {
       int remainingMillis =
           (_targetTimeMillis - elapsedMillis).clamp(0, _targetTimeMillis);
       if (remainingMillis >= 0) {
+        int minutes = (remainingMillis ~/ (1000 * 60)) % 60;
         int seconds = (remainingMillis ~/ 1000) % 60;
-        int millisec = (remainingMillis % 1000) ~/ 10;
-        remainingTime.value = '${_padZero(seconds)}:${_padZero(millisec)}';
+        remainingTime.value = '${_padZero(minutes)}:${_padZero(seconds)}';
       }
     });
     super.onInit();
@@ -74,9 +74,29 @@ class MyApp extends StatelessWidget {
                   style: const TextStyle(fontSize: 50),
                 ),
               ),
-              ElevatedButton(
-                onPressed: () => stopwatchController.setTimer(10 * 1000),
-                child: const Text('10秒'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  ElevatedButton(
+                    onPressed: () =>
+                        stopwatchController.setTimer(5 * 60 * 1000),
+                    child: const Text('5分'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () =>
+                        stopwatchController.setTimer(3 * 60 * 1000),
+                    child: const Text('3分'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () =>
+                        stopwatchController.setTimer(1 * 60 * 1000),
+                    child: const Text('1分'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => stopwatchController.setTimer(10 * 1000),
+                    child: const Text('10秒'),
+                  ),
+                ],
               ),
               ElevatedButton(
                 onPressed: () => stopwatchController.startStopTimer(),
