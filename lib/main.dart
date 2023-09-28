@@ -10,6 +10,8 @@ class StopwatchController extends GetxController {
   final Stopwatch _stopwatch = Stopwatch();
 
   int _targetTimeMillis = 0;
+
+  int _remainingTimeMillis = 0;
   final RxString remainingTime = '00:00'.obs;
 
   final RxBool isTimerRunning = false.obs;
@@ -25,7 +27,7 @@ class StopwatchController extends GetxController {
         int seconds = (remainingMillis ~/ 1000) % 60;
         remainingTime.value = '${_padZero(minutes)}:${_padZero(seconds)}';
       }
-
+      _remainingTimeMillis = remainingMillis;
       isTimerRunning.value = _stopwatch.isRunning;
     });
     super.onInit();
@@ -38,9 +40,10 @@ class StopwatchController extends GetxController {
   }
 
   void setTimer(int timeMillis) {
-    _stopwatch.stop();
-    _stopwatch.reset();
-    _targetTimeMillis = timeMillis;
+    if (!_stopwatch.isRunning) {
+      _stopwatch.reset();
+      _targetTimeMillis = _remainingTimeMillis + timeMillis;
+    }
   }
 
   void startStopTimer() {
@@ -54,6 +57,7 @@ class StopwatchController extends GetxController {
   void resetTimer() {
     _stopwatch.stop();
     _stopwatch.reset();
+    _targetTimeMillis = 0;
   }
 
   String _padZero(int num) => num.toString().padLeft(2, '0');
