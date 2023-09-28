@@ -1,9 +1,13 @@
 import 'dart:async';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(MyApp());
+}
 
 class StopwatchController extends GetxController {
   late final Timer _timer;
@@ -16,8 +20,12 @@ class StopwatchController extends GetxController {
 
   final RxBool isTimerRunning = false.obs;
 
+  final AudioPlayer _audioPlayer = AudioPlayer();
+
   @override
   void onInit() {
+    _audioPlayer.setReleaseMode(ReleaseMode.loop);
+    bool isAudioRunning = false;
     _timer = Timer.periodic(const Duration(milliseconds: 30), (timer) {
       int elapsedMillis = _stopwatch.elapsedMilliseconds;
       int remainingMillis =
@@ -26,6 +34,14 @@ class StopwatchController extends GetxController {
         int minutes = (remainingMillis ~/ (1000 * 60)) % 60;
         int seconds = (remainingMillis ~/ 1000) % 60;
         remainingTime.value = '${_padZero(minutes)}:${_padZero(seconds)}';
+      }
+      if (remainingMillis == 0 && _stopwatch.isRunning && !isAudioRunning) {
+        _audioPlayer.play(AssetSource('kitchen_timer1.mp3'));
+        isAudioRunning = true;
+      }
+      if (!_stopwatch.isRunning && isAudioRunning) {
+        _audioPlayer.stop();
+        isAudioRunning = false;
       }
       _remainingTimeMillis = remainingMillis;
       isTimerRunning.value = _stopwatch.isRunning;
@@ -36,6 +52,7 @@ class StopwatchController extends GetxController {
   @override
   void dispose() {
     _timer.cancel();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
