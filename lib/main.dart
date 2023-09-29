@@ -73,7 +73,7 @@ class TimerController extends GetxController {
   void startStopTimer() {
     if (_stopwatch.isRunning) {
       _stopwatch.stop();
-    } else {
+    } else if (_remainingTimeMillis != 0) {
       _stopwatch.start();
     }
   }
