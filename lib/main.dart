@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]).then((_) => runApp(MyApp()));
 }
 
 class TimerController extends GetxController {
@@ -23,6 +27,8 @@ class TimerController extends GetxController {
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isAudioRunning = false;
 
+  final RxDouble timerProgress = 0.0.obs;
+
   @override
   void onInit() {
     _audioPlayer.setReleaseMode(ReleaseMode.loop);
@@ -30,6 +36,8 @@ class TimerController extends GetxController {
       _updateRemainingTime();
       _soundOnTimerEnd();
       isTimerRunning.value = _stopwatch.isRunning;
+      timerProgress.value =
+          _targetTimeMillis == 0 ? 0 : _remainingTimeMillis / _targetTimeMillis;
     });
     super.onInit();
   }
@@ -87,59 +95,223 @@ class TimerController extends GetxController {
   String _padZero(int num) => num.toString().padLeft(2, '0');
 }
 
+class AppColor {
+  static const Color primary = Color(0xFF7A8ECD);
+  static const Color secondary = Color(0xFF4D6BCB);
+  static const Color accent = Color(0xFF4DACCC);
+}
+
 class MyApp extends StatelessWidget {
   MyApp({super.key});
 
   final timerController = Get.put(TimerController());
 
+  Widget _buildCircularProgress({
+    double size = 250,
+    required Widget child,
+  }) =>
+      SizedBox(
+        width: size,
+        height: size,
+        child: Stack(
+          fit: StackFit.expand,
+          children: <Widget>[
+            Obx(
+              () => CircularProgressIndicator(
+                value: timerController.timerProgress.value,
+                valueColor: const AlwaysStoppedAnimation(AppColor.secondary),
+                strokeWidth: 6,
+                // 0xFF4D80CC, 0xFF4DACCC, 0xFF4DCCB1
+                backgroundColor: timerController.isTimerRunning.value ||
+                        timerController.timerProgress.value != 0
+                    ? AppColor.accent
+                    : AppColor.secondary,
+              ),
+            ),
+            Center(child: child),
+          ],
+        ),
+      );
+
+  Widget _buildSquareButton(
+          {required VoidCallback onPressed, required Widget child}) =>
+      OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: AppColor.primary,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: child,
+      );
+
+  Widget _buildTimeButton({
+    required VoidCallback onPressed,
+    required int timeValue,
+    required String timeUnit,
+    double padding = 10,
+  }) =>
+      OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          backgroundColor: AppColor.primary,
+          padding: EdgeInsets.all(padding),
+          shape: const CircleBorder(),
+          side: const BorderSide(color: Colors.white),
+        ),
+        child: Column(
+          children: <Widget>[
+            Text('+${timeValue.toString()}',
+                style: const TextStyle(color: Colors.white)),
+            Text(timeUnit, style: const TextStyle(color: Colors.white)),
+          ],
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
+      theme: ThemeData(
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent),
+        scaffoldBackgroundColor: AppColor.primary,
+      ),
       home: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'キッチンタイマー',
+            style: TextStyle(color: Colors.white),
+          ),
+          actions: <Widget>[
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.volume_up),
+            ),
+          ],
+          iconTheme: const IconThemeData(color: Colors.white),
+        ),
+        drawer: Drawer(
+          child: Column(
+            children: <Widget>[
+              Container(
+                width: double.infinity,
+                height: 180,
+                decoration: const BoxDecoration(color: AppColor.primary),
+                child: const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('キッチンタイマー',
+                        style: TextStyle(fontSize: 20, color: Colors.white)),
+                    SizedBox(
+                      height: 15,
+                    ),
+                    Text('ver.0.0.0', style: TextStyle(color: Colors.white)),
+                    Text('開発者: Yuto Harada',
+                        style: TextStyle(color: Colors.white)),
+                  ],
+                ),
+              ),
+              ListTile(
+                onTap: () => Get.to(() => const ContactView()),
+                title: const Text('お問い合わせ'),
+              ),
+            ],
+          ),
+        ),
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Obx(
-                () => Text(
-                  timerController.remainingTime.value,
-                  style: const TextStyle(fontSize: 50),
+              _buildCircularProgress(
+                child: Obx(
+                  () => Text(
+                    timerController.remainingTime.value,
+                    style: const TextStyle(
+                      fontSize: 65,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
+              const SizedBox(height: 40),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
-                  ElevatedButton(
+                  _buildTimeButton(
                     onPressed: () => timerController.setTimer(5 * 60 * 1000),
-                    child: const Text('5分'),
+                    timeValue: 5,
+                    timeUnit: '分',
                   ),
-                  ElevatedButton(
+                  const SizedBox(width: 10),
+                  _buildTimeButton(
                     onPressed: () => timerController.setTimer(3 * 60 * 1000),
-                    child: const Text('3分'),
+                    timeValue: 3,
+                    timeUnit: '分',
                   ),
-                  ElevatedButton(
+                  const SizedBox(width: 10),
+                  _buildTimeButton(
                     onPressed: () => timerController.setTimer(1 * 60 * 1000),
-                    child: const Text('1分'),
+                    timeValue: 1,
+                    timeUnit: '分',
                   ),
-                  ElevatedButton(
+                  const SizedBox(width: 10),
+                  _buildTimeButton(
                     onPressed: () => timerController.setTimer(10 * 1000),
-                    child: const Text('10秒'),
+                    timeValue: 10,
+                    timeUnit: '秒',
                   ),
                 ],
               ),
-              ElevatedButton(
-                onPressed: () => timerController.startStopTimer(),
-                child: Obx(
-                  () => Text(
-                    timerController.isTimerRunning.value ? 'ストップ' : 'スタート',
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  _buildSquareButton(
+                    onPressed: () => timerController.resetTimer(),
+                    child: const Text('リセット',
+                        style: TextStyle(fontSize: 20, color: Colors.white)),
                   ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () => timerController.resetTimer(),
-                child: const Text('リセット'),
+                  const SizedBox(width: 10),
+                  _buildSquareButton(
+                    onPressed: () => timerController.startStopTimer(),
+                    child: Obx(
+                      () => Text(
+                        timerController.isTimerRunning.value ? 'ストップ' : 'スタート',
+                        style:
+                            const TextStyle(fontSize: 20, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ContactView extends StatelessWidget {
+  const ContactView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'お問い合わせ',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: const Center(
+        child: Text(
+          '準備中',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
           ),
         ),
       ),
