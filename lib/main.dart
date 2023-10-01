@@ -4,6 +4,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
+import 'package:vibration/vibration.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +16,7 @@ void main() {
 
 class TimerController extends GetxController {
   late final Timer _timer;
+  Timer? _timerVibrate;
   final Stopwatch _stopwatch = Stopwatch();
 
   int _targetTimeMillis = 0;
@@ -26,6 +28,9 @@ class TimerController extends GetxController {
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isAudioRunning = false;
+
+  final RxBool _isAudioActive = true.obs;
+  bool get isAudioActive => _isAudioActive.value;
 
   final RxDouble timerProgress = 0.0.obs;
 
@@ -55,11 +60,17 @@ class TimerController extends GetxController {
 
   void _soundOnTimerEnd() {
     if (_remainingTimeMillis == 0 && _stopwatch.isRunning && !_isAudioRunning) {
-      _audioPlayer.play(AssetSource('kitchen_timer1.mp3'));
+      if (_isAudioActive.value) {
+        _audioPlayer.play(AssetSource('kitchen_timer1.mp3'));
+      }
+      _timerVibrate = Timer.periodic(const Duration(seconds: 1), (timer) {
+        Vibration.vibrate(duration: 500);
+      });
       _isAudioRunning = true;
     }
     if (!_stopwatch.isRunning && _isAudioRunning) {
       _audioPlayer.stop();
+      _timerVibrate?.cancel();
       _isAudioRunning = false;
     }
   }
@@ -90,6 +101,12 @@ class TimerController extends GetxController {
     _stopwatch.stop();
     _stopwatch.reset();
     _targetTimeMillis = 0;
+  }
+
+  void toggleAudioActive() {
+    if (!_isAudioRunning) {
+      _isAudioActive.value = !_isAudioActive.value;
+    }
   }
 
   String _padZero(int num) => num.toString().padLeft(2, '0');
@@ -185,8 +202,14 @@ class MyApp extends StatelessWidget {
           ),
           actions: <Widget>[
             IconButton(
-              onPressed: () {},
-              icon: const Icon(Icons.volume_up),
+              onPressed: () => timerController.toggleAudioActive(),
+              icon: Obx(
+                () => Icon(
+                  timerController.isAudioActive
+                      ? Icons.volume_up
+                      : Icons.volume_off,
+                ),
+              ),
             ),
           ],
           iconTheme: const IconThemeData(color: Colors.white),
@@ -207,8 +230,10 @@ class MyApp extends StatelessWidget {
                       height: 15,
                     ),
                     Text('ver.0.0.0', style: TextStyle(color: Colors.white)),
-                    Text('開発者: Yuto Harada',
-                        style: TextStyle(color: Colors.white)),
+                    SizedBox(
+                      height: 5,
+                    ),
+                    Text('開発者: ゆとり', style: TextStyle(color: Colors.white)),
                   ],
                 ),
               ),
