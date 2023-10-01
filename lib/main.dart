@@ -2,11 +2,15 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]).then((_) => runApp(MyApp()));
 }
 
 class TimerController extends GetxController {
@@ -168,7 +172,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       theme: ThemeData(
         appBarTheme: const AppBarTheme(backgroundColor: Colors.transparent),
         scaffoldBackgroundColor: AppColor.primary,
@@ -208,8 +212,10 @@ class MyApp extends StatelessWidget {
                   ],
                 ),
               ),
-              ListTile(onTap: () {}, title: const Text('ホーム')),
-              ListTile(onTap: () {}, title: const Text('お問い合わせ')),
+              ListTile(
+                onTap: () => Get.to(() => const ContactView()),
+                title: const Text('お問い合わせ'),
+              ),
             ],
           ),
         ),
@@ -280,6 +286,32 @@ class MyApp extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class ContactView extends StatelessWidget {
+  const ContactView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'お問い合わせ',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: const Center(
+        child: Text(
+          '準備中',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 30,
           ),
         ),
       ),
