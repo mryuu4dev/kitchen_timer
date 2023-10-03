@@ -25,6 +25,7 @@ class TimerController extends GetxController {
   final RxString remainingTime = '00:00'.obs;
 
   final RxBool isTimerRunning = false.obs;
+  final RxBool isTimerFinished = false.obs;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
   bool _isAudioRunning = false;
@@ -41,6 +42,7 @@ class TimerController extends GetxController {
       _updateRemainingTime();
       _soundOnTimerEnd();
       isTimerRunning.value = _stopwatch.isRunning;
+      isTimerFinished.value = _remainingTimeMillis == 0 && _stopwatch.isRunning;
       timerProgress.value =
           _targetTimeMillis == 0 ? 0 : _remainingTimeMillis / _targetTimeMillis;
     });
@@ -59,7 +61,7 @@ class TimerController extends GetxController {
   }
 
   void _soundOnTimerEnd() {
-    if (_remainingTimeMillis == 0 && _stopwatch.isRunning && !_isAudioRunning) {
+    if (isTimerFinished.value && !_isAudioRunning) {
       if (_isAudioActive.value) {
         _audioPlayer.play(AssetSource('kitchen_timer.mp3'));
       }
@@ -119,7 +121,31 @@ class AppColor {
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({super.key});
+  MyApp({super.key}) {
+    ever(timerController.isTimerFinished, (bool flag) {
+      if (flag) {
+        Get.defaultDialog(
+          title: '時間になりました',
+          titleStyle: const TextStyle(fontSize: 20),
+          middleText: 'ボタンをタップしてタイマーを止める',
+          confirm: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () {
+              timerController.resetTimer();
+              Get.back();
+            },
+            child:
+                const Text('ストップ', style: TextStyle(color: AppColor.primary)),
+          ),
+          barrierDismissible: false,
+        );
+      }
+    });
+  }
 
   final timerController = Get.put(TimerController());
 
