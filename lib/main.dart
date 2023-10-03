@@ -61,7 +61,7 @@ class TimerController extends GetxController {
   void _soundOnTimerEnd() {
     if (_remainingTimeMillis == 0 && _stopwatch.isRunning && !_isAudioRunning) {
       if (_isAudioActive.value) {
-        _audioPlayer.play(AssetSource('kitchen_timer1.mp3'));
+        _audioPlayer.play(AssetSource('kitchen_timer.mp3'));
       }
       _timerVibrate = Timer.periodic(const Duration(seconds: 1), (timer) {
         Vibration.vibrate(duration: 500);
