@@ -1,16 +1,23 @@
-# kitchen_timer
+# 無料のキッチンタイマー
 
-A new Flutter project.
+シンプルでわかりやすい無料のキッチンタイマーです. バイブレーションと音でお知らせします.
 
-## Getting Started
+## リリース
+1. `jks`ファイルを作成する
+```bash
+keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+```
 
-This project is a starting point for a Flutter application.
+2. `android/key.properties`を下記のように作成する
 
-A few resources to get you started if this is your first Flutter project:
+```
+storePassword=<password from previous step>
+keyPassword=<password from previous step>
+keyAlias=upload
+storeFile=<location of the key store file, such as C:/Users/b1018/upload-keystore.jks>
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+3. appbundleファイルのビルドを実行する
+```bash
+flutter build appbundle
+```
