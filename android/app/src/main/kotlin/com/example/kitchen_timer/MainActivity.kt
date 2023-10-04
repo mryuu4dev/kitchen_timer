@@ -1,4 +1,4 @@
-package com.example.kitchen_timer
+package com.mryuu4dev.kitchen_timer
 
 import io.flutter.embedding.android.FlutterActivity
 
