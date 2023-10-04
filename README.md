@@ -3,7 +3,7 @@
 シンプルでわかりやすい無料のキッチンタイマーです. バイブレーションと音でお知らせします.
 
 ## リリース
-1. `jsk`ファイルを作成する
+1. `jks`ファイルを作成する
 ```bash
 keytool -genkey -v -keystore ~/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload
 ```
