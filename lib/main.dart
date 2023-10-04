@@ -255,7 +255,7 @@ class MyApp extends StatelessWidget {
                     SizedBox(
                       height: 15,
                     ),
-                    Text('ver.0.0.0', style: TextStyle(color: Colors.white)),
+                    Text('ver.1.0.0', style: TextStyle(color: Colors.white)),
                     SizedBox(
                       height: 5,
                     ),
