@@ -54,7 +54,7 @@ class TimerController extends GetxController {
     _remainingTimeMillis =
         (_targetTimeMillis - elapsedTimeMillis).clamp(0, _targetTimeMillis);
     if (_remainingTimeMillis >= 0) {
-      int minutes = (_remainingTimeMillis ~/ (1000 * 60)) % 60;
+      int minutes = (_remainingTimeMillis ~/ (1000 * 60)) % 100;
       int seconds = (_remainingTimeMillis ~/ 1000) % 60;
       remainingTime.value = '${_padZero(minutes)}:${_padZero(seconds)}';
     }
@@ -87,7 +87,10 @@ class TimerController extends GetxController {
   void setTimer(int timeMillis) {
     if (!_stopwatch.isRunning) {
       _stopwatch.reset();
-      _targetTimeMillis = _remainingTimeMillis + timeMillis;
+      const int maxTargetTimeMillis = 5999000;
+      if (_remainingTimeMillis + timeMillis < maxTargetTimeMillis) {
+        _targetTimeMillis = _remainingTimeMillis + timeMillis;
+      }
     }
   }
 
